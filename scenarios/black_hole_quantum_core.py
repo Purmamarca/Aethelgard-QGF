@@ -54,16 +54,21 @@ def create_black_hole_scenario(grid_size=64, domain_size=20.0):
     
     # Mass distribution: 1/r^2 profile (like Schwarzschild)
     print("\n[1/4] Creating black hole mass distribution (1/r² profile)...")
-    mass_distribution = 5e12 / (r**2 + 0.5)  # kg/m³
+    # Scale mass to astrophysical densities (~1e27 kg/m³) to observe GR effects
+    mass_scale = 1e27
+    mass_distribution = 5.0 * mass_scale / (r**2 + 0.5)  # kg/m³
     
     # Quantum entropy: High at core, decreasing outward
     print("[2/4] Generating quantum core (high entropy region)...")
     r_core = 2.0  # Core radius in meters
-    entropy_map = 15.0 * np.exp(-r**2 / r_core**2)
+    # Entropy must be ~10^66 to create pressure comparable to gravity in SI units
+    # (Bekenstein-Hawking entropy S = A/4Lp^2 ~ 10^70 for macroscopic objects)
+    entropy_scale = 1e67
+    entropy_map = 15.0 * entropy_scale * np.exp(-r**2 / r_core**2)
     
     # Add quantum fluctuations
     np.random.seed(42)
-    entropy_map += 0.5 * np.random.randn(grid_size, grid_size, grid_size)
+    entropy_map += 0.5 * entropy_scale * np.random.randn(grid_size, grid_size, grid_size)
     entropy_map = np.abs(entropy_map)
     
     # Solve field equations
@@ -77,6 +82,19 @@ def create_black_hole_scenario(grid_size=64, domain_size=20.0):
     
     # Extract metric component
     g_00 = result_metric[..., 0, 0]
+
+    # Control Run: Classical Black Hole (No Quantum Core)
+    print("\n[3.5/4] Running classical control simulation (no quantum core)...")
+    engine_classic = AethelgardEngine(grid_size=grid_size, domain_size=domain_size)
+    metric_classic = engine_classic.solve_field_equations(
+        mass_distribution,
+        np.zeros_like(entropy_map),
+        iterations=200
+    )
+    g_00_classic = metric_classic[..., 0, 0]
+
+    # Calculate Quantum Shift
+    quantum_shift = g_00 - g_00_classic
     
     # Calculate quantum pressure
     T_quantum = engine.calculate_quantum_pressure(entropy_map)
@@ -122,12 +140,15 @@ def create_black_hole_scenario(grid_size=64, domain_size=20.0):
     axes[1, 0].legend()
     
     # Quantum pressure profile
-    axes[1, 1].plot(r_plot, T_quantum[center_idx, center_idx, radial_slice])
+    axes[1, 1].plot(r_plot, T_quantum[center_idx, center_idx, radial_slice], label='Pressure')
+    axes[1, 1].plot(r_plot, quantum_shift[center_idx, center_idx, radial_slice],
+                    color='purple', linestyle='--', label='Metric Shift')
     axes[1, 1].axhline(0, color='gray', linestyle='--')
     axes[1, 1].set_xlabel('Radius (m)')
-    axes[1, 1].set_ylabel('Quantum Pressure')
-    axes[1, 1].set_title('Antigravity Pressure (Repulsive)')
+    axes[1, 1].set_ylabel('Amplitude')
+    axes[1, 1].set_title('Antigravity Pressure & Metric Shift')
     axes[1, 1].grid(True, alpha=0.3)
+    axes[1, 1].legend()
     
     plt.tight_layout()
     plt.savefig(output_dir / 'black_hole_radial_profiles.png', dpi=150)
@@ -174,10 +195,25 @@ def create_black_hole_scenario(grid_size=64, domain_size=20.0):
     outer_mask = r > 5.0
     print(f"  • Average g₀₀ outer: {np.mean(g_00[outer_mask]):.6f}")
     print(f"  • Average entropy outer: {np.mean(entropy_map[outer_mask]):.4f}")
+
+    print("\nQuantum Shift Analysis (Anti-Gravity Anomalies):")
+    max_shift = np.max(quantum_shift)
+    min_shift = np.min(quantum_shift)
+    print(f"  • Max Positive Shift (Antigravity): {max_shift:.6f}")
+    print(f"  • Min Negative Shift: {min_shift:.6f}")
+
+    core_shift = np.mean(quantum_shift[core_mask])
+    print(f"  • Average Shift in Core: {core_shift:.6f}")
+
+    if max_shift > 0.1:
+        print("  ✓ SIGNIFICANT ANTI-GRAVITY ANOMALY DETECTED")
+        print("    The quantum core is effectively screening the gravitational mass.")
     
     print("\nSingularity Prevention:")
     central_g00 = g_00[center_idx, center_idx, center_idx]
     print(f"  • Central g₀₀ value: {central_g00:.6f}")
+    print(f"  • Classical g₀₀ would be: {g_00_classic[center_idx, center_idx, center_idx]:.6f}")
+
     if central_g00 > 0.5:
         print("  ✓ Singularity avoided! Quantum pressure prevents collapse.")
     else:
