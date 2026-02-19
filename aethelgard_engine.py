@@ -31,8 +31,8 @@ class AethelgardEngine:
         # S = A / 4G_hbar -> Localized entropy gradients
         grad_S = np.gradient(entropy_field, self.dx)
         laplacian_S = np.zeros_like(entropy_field)
-        for g in grad_S:
-            laplacian_S += np.gradient(g, self.dx)[0]
+        for i, g in enumerate(grad_S):
+            laplacian_S += np.gradient(g, self.dx)[i]
             
         # The 'Antigravity' Term: Repulsive Stress-Energy (T_quantum)
         # Effectively a local Dark Energy/Lambda term

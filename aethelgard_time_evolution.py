@@ -194,8 +194,8 @@ class AethelgardEngineTimeEvolution(AethelgardEngine):
         # Compute Laplacian
         grad_S = np.gradient(entropy, self.dx)
         laplacian_S = np.zeros_like(entropy)
-        for g in grad_S:
-            laplacian_S += np.gradient(g, self.dx)[0]
+        for i, g in enumerate(grad_S):
+            laplacian_S += np.gradient(g, self.dx)[i]
         
         # Update entropy
         entropy_new = entropy + self.dt * D * laplacian_S

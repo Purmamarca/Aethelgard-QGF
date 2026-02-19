@@ -100,6 +100,33 @@ class TestAethelgardEngine(unittest.TestCase):
         """Verify grid spacing is positive."""
         self.assertGreater(self.engine.dx, 0)
 
+    def test_quantum_pressure_directional_gradients(self):
+        """Test that Laplacian calculation correctly handles all spatial directions."""
+        # Create a field f(x,y,z) = x^2 + y^2 + z^2
+        # Laplacian should be 2+2+2 = 6 everywhere
+        # Use arange to ensure dx matches engine.dx
+        x = np.arange(self.engine.N) * self.engine.dx
+        X, Y, Z = np.meshgrid(x, x, x, indexing='ij')
+        entropy_field = X**2 + Y**2 + Z**2
+
+        # Calculate quantum pressure
+        # T_quantum = const * Laplacian
+        T_quantum = self.engine.calculate_quantum_pressure(entropy_field)
+
+        # Calculate expected constant factor
+        const = (self.engine.hbar * self.engine.c / (self.engine.dx**4))
+        expected_pressure = const * 6.0
+
+        # Check mean value (ignoring boundaries where numerical differentiation is less accurate)
+        inner_slice = (slice(2, -2), slice(2, -2), slice(2, -2))
+        computed_mean = np.mean(T_quantum[inner_slice])
+
+        # Should be close to expected value
+        # Allow some numerical error tolerance
+        # Note: Since values are very small (Planck scale), we must set atol to 0 or very small
+        self.assertTrue(np.isclose(computed_mean, expected_pressure, rtol=0.1, atol=0),
+                       f"Expected {expected_pressure}, got {computed_mean}. Laplacian calculation may be ignoring dimensions.")
+
 
 class TestPhysicalConsistency(unittest.TestCase):
     """Tests for physical consistency of the model."""
