@@ -107,8 +107,8 @@ class AethelgardEngineGPU:
         grad_S = self.xp.gradient(entropy_field, self.dx)
         laplacian_S = self.xp.zeros_like(entropy_field)
         
-        for g in grad_S:
-            laplacian_S += self.xp.gradient(g, self.dx)[0]
+        for i, g in enumerate(grad_S):
+            laplacian_S += self.xp.gradient(g, self.dx)[i]
         
         # The 'Antigravity' Term: Repulsive Stress-Energy (T_quantum)
         T_quantum = (self.hbar * self.c / (self.dx**4)) * laplacian_S
