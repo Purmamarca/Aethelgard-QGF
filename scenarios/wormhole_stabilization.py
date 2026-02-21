@@ -12,12 +12,14 @@ Physical Interpretation:
 - Stabilization without classical exotic matter
 """
 
-import numpy as np
 import matplotlib
+import numpy as np
+
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-from pathlib import Path
 import sys
+from pathlib import Path
+
+import matplotlib.pyplot as plt
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from aethelgard_engine import AethelgardEngine

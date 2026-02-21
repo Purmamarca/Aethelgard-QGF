@@ -14,11 +14,14 @@ Note: This is a simplified implementation for educational purposes.
 Full numerical relativity requires more sophisticated methods (BSSN, etc.)
 """
 
-import numpy as np
 import matplotlib
+import numpy as np
+
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 from pathlib import Path
+
+import matplotlib.pyplot as plt
+
 from aethelgard_engine import AethelgardEngine
 
 
@@ -156,13 +159,10 @@ class AethelgardEngineTimeEvolution(AethelgardEngine):
         # Update spatial metric components (simplified)
         for i in range(1, 4):  # Spatial indices
             for j in range(i, 4):
-                # Simplified evolution equation
-                metric_update = -2 * self.alpha[..., np.newaxis, np.newaxis] * self.K
-                
                 # Apply update to g_ij
                 if i == j:
                     self.metric[..., i, i] += self.dt * curvature_source * 0.01
-        
+
         # Update g_00 (time-time component)
         self.metric[..., 0, 0] += self.dt * curvature_source * 0.01
     

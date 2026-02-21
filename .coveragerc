@@ -1,0 +1,15 @@
+[run]
+source = .
+omit =
+    # Exclude external dependencies and non-core scripts
+    example_*.py
+    interactive_visualizer.py
+    aethelgard_engine_gpu.py
+    aethelgard_time_evolution.py
+    run_tests.py
+    tests/*
+    scenarios/*
+
+[report]
+show_missing = True
+precision = 2

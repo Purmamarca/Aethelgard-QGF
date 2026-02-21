@@ -3,7 +3,9 @@ Unit tests for the Aethelgard-QGF engine.
 """
 
 import unittest
+
 import numpy as np
+
 from aethelgard_engine import AethelgardEngine
 
 
@@ -126,6 +128,23 @@ class TestAethelgardEngine(unittest.TestCase):
         # Note: Since values are very small (Planck scale), we must set atol to 0 or very small
         self.assertTrue(np.isclose(computed_mean, expected_pressure, rtol=0.1, atol=0),
                        f"Expected {expected_pressure}, got {computed_mean}. Laplacian calculation may be ignoring dimensions.")
+
+
+    def test_causality_constraint_enforced(self):
+        """
+        TDD: Test that the engine prevents metric components from 
+        reaching extreme non-physical values (Causality Constraint).
+        """
+        # Create extreme mass that would normally cause huge curvature
+        mass_dist = np.ones((16, 16, 16)) * 1e40 
+        entropy_map = np.zeros((16, 16, 16))
+        
+        # This uses self.engine from setUp
+        result = self.engine.solve_field_equations(mass_dist, entropy_map, iterations=10)
+        
+        # Metric should be capped, not exploding to infinity
+        self.assertLessEqual(np.max(result[..., 0, 0]), 10.0)
+        self.assertGreaterEqual(np.min(result[..., 0, 0]), 0.1)
 
 
 class TestPhysicalConsistency(unittest.TestCase):

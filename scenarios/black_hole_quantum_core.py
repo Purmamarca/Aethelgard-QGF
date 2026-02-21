@@ -12,12 +12,14 @@ Physical Interpretation:
 - Results in a "gravastar" or "quantum star" configuration
 """
 
-import numpy as np
 import matplotlib
+import numpy as np
+
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-from pathlib import Path
 import sys
+from pathlib import Path
+
+import matplotlib.pyplot as plt
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))

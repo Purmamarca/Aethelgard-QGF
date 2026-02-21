@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.ndimage import gaussian_filter
+
 
 class AethelgardEngine:
     """
@@ -16,9 +16,12 @@ class AethelgardEngine:
         self.G = 6.674e-11
         self.c = 3.0e8
         self.hbar = 1.054e-34
+
+        # Physical Constraints & Limits
+        self.causality_limit = (0.1, 10.0)
         
-        # Initialize Spacetime Grid (Minkowski start)
-        self.metric = np.ones((self.N, self.N, self.N, 4, 4)) * -1.0
+        # Initialize Spacetime Grid (Minkowski-like start)
+        self.metric = np.zeros((self.N, self.N, self.N, 4, 4))
         for i in range(4): 
             self.metric[..., i, i] = 1.0  # Diagonal components
 
@@ -39,29 +42,32 @@ class AethelgardEngine:
         T_quantum = (self.hbar * self.c / (self.dx**4)) * laplacian_S
         return T_quantum
 
-    def solve_field_equations(self, mass_distribution, entropy_map, iterations=50):
+    def solve_field_equations(self, mass_distribution, entropy_map, iterations=50, verbose=True):
         """
         Iterative solver for G_mu_nu + Lambda*g_mu_nu = 8*pi*G*T_mu_nu.
         Balances standard mass (attractive) vs quantum info (repulsive).
         """
-        print(f"Synthesizing metric for Aethelgard-QGF...")
+        print("Synthesizing metric for Aethelgard-QGF...")
         
         current_geometry = self.metric.copy()
         
-        for i in range(iterations):
-            # 1. Compute Classical Stress (Attractive)
-            T_classic = mass_distribution * (self.c**2)
-            
-            # 2. Compute Quantum Stress (Repulsive / Antigravity candidate)
-            T_repulsive = self.calculate_quantum_pressure(entropy_map)
-            
-            # 3. Total Stress-Energy Tensor T_total
-            T_total = T_classic - T_repulsive  # Negative sign allows for 'antigravity' effects
-            
-            # 4. Update Metric based on Einstein Tensor G_mu_nu
+        # Pre-compute stresses (assuming static distributions for this solver run)
+        T_classic = mass_distribution * (self.c**2)
+        T_repulsive = self.calculate_quantum_pressure(entropy_map)
+        T_total = T_classic - T_repulsive
+
+        for _ in range(iterations):
+            # Update Metric based on Einstein Tensor G_mu_nu
             # Solving for g_mu_nu using a linearized approximation
             curvature_update = (8 * np.pi * self.G / self.c**4) * T_total
             current_geometry[..., 0, 0] += 0.01 * curvature_update
+            
+            # PHYSICAL CONSTRAINT: Causality Clamp
+            current_geometry[..., 0, 0] = np.clip(
+                current_geometry[..., 0, 0], 
+                self.causality_limit[0], 
+                self.causality_limit[1]
+            )
             
         self.metric = current_geometry
         return self.metric

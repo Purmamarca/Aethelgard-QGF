@@ -13,15 +13,15 @@ Usage:
 Then open your browser to: http://localhost:8050
 """
 
+
 import numpy as np
-from pathlib import Path
 
 try:
-    import plotly.graph_objects as go
-    from plotly.subplots import make_subplots
     import dash
+    import plotly.graph_objects as go
     from dash import dcc, html
     from dash.dependencies import Input, Output, State
+    from plotly.subplots import make_subplots
     INTERACTIVE_AVAILABLE = True
 except ImportError:
     INTERACTIVE_AVAILABLE = False
@@ -83,6 +83,7 @@ class InteractiveVisualizer:
                         {'label': 'Black Hole with Quantum Core', 'value': 'blackhole'},
                         {'label': 'Wormhole Stabilization', 'value': 'wormhole'},
                         {'label': 'Dark Energy Vacuum', 'value': 'darkenergy'},
+                        {'label': 'Supernova Collapse', 'value': 'supernova'},
                         {'label': 'Custom Gaussian', 'value': 'custom'}
                     ],
                     value='blackhole'
@@ -179,6 +180,9 @@ class InteractiveVisualizer:
             elif scenario == 'darkenergy':
                 self._create_darkenergy_scenario()
                 return "✓ Dark energy scenario loaded!"
+            elif scenario == 'supernova':
+                self._create_supernova_scenario()
+                return "✓ Supernova scenario loaded!"
             else:
                 self._create_custom_scenario()
                 return "✓ Custom scenario loaded!"
@@ -333,6 +337,21 @@ class InteractiveVisualizer:
         center = self.domain_size / 2
         self.mass_dist = 1e11 * np.exp(-((self.X-center)**2 + (self.Y-center)**2 + (self.Z-center)**2) / 4.0)
         self.entropy_map = 10.0 * np.exp(-((self.X-center)**2 + (self.Y-center)**2 + (self.Z-center)**2) / 6.0)
+        
+        self.metric = self.engine.solve_field_equations(
+            self.mass_dist, self.entropy_map, iterations=100, verbose=False
+        )
+        self.quantum_pressure = self.engine.calculate_quantum_pressure(self.entropy_map)
+
+    def _create_supernova_scenario(self):
+        """Create supernova collapse scenario."""
+        r = np.sqrt((self.X - self.domain_size/2)**2 + 
+                   (self.Y - self.domain_size/2)**2 + 
+                   (self.Z - self.domain_size/2)**2)
+        
+        # High density core, expanding shell
+        self.mass_dist = 2e12 * np.exp(-r**2 / 1.0) + 5e11 * np.exp(-(r-4)**2 / 0.5)
+        self.entropy_map = 25.0 * np.exp(-r**2 / 2.0)
         
         self.metric = self.engine.solve_field_equations(
             self.mass_dist, self.entropy_map, iterations=100, verbose=False

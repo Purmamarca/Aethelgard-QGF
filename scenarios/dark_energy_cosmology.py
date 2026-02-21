@@ -12,12 +12,14 @@ Physical Interpretation:
 - Repulsive pressure → accelerated expansion
 """
 
-import numpy as np
 import matplotlib
+import numpy as np
+
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-from pathlib import Path
 import sys
+from pathlib import Path
+
+import matplotlib.pyplot as plt
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from aethelgard_engine import AethelgardEngine
@@ -208,9 +210,9 @@ def create_dark_energy_scenario(grid_size=32, domain_size=10.0):
     
     # Effective cosmological constant
     Lambda_eff = mean_pressure * (8 * np.pi * engine.G / engine.c**4)
-    print(f"\nEffective Cosmological Constant:")
+    print("\nEffective Cosmological Constant:")
     print(f"  • Λ_eff ≈ {Lambda_eff:.6e} m⁻²")
-    print(f"  • (Compare to observed: Λ_obs ≈ 1.1×10⁻⁵² m⁻²)")
+    print("  • (Compare to observed: Λ_obs ≈ 1.1×10⁻⁵² m⁻²)")
     
     print("\n" + "=" * 70)
     print("Dark energy simulation complete!")

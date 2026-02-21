@@ -4,12 +4,14 @@ This creates a scenario with localized mass and quantum entropy fields
 to observe the interplay between attractive and repulsive geometric effects.
 """
 
-import numpy as np
 import matplotlib
+import numpy as np
+
 matplotlib.use('Agg')  # Use non-interactive backend
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+
 from aethelgard_engine import AethelgardEngine
+
 
 def create_gaussian_distribution(grid_size, center, sigma):
     """Create a 3D Gaussian distribution centered at a point."""

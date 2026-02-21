@@ -64,20 +64,23 @@ class AethelgardEngineGPU:
         self.xp = cp if self.use_gpu else np
         
         if self.use_gpu:
-            print(f"🚀 Using GPU acceleration (CuPy)")
+            print("🚀 Using GPU acceleration (CuPy)")
             # Print GPU info
             try:
                 device = cp.cuda.Device()
                 print(f"   Device: {device.compute_capability}")
                 mem_info = cp.cuda.runtime.memGetInfo()
                 print(f"   Free memory: {mem_info[0] / 1e9:.2f} GB")
-            except:
+            except Exception:
                 pass
         else:
-            print(f"💻 Using CPU (NumPy)")
+            print("💻 Using CPU (NumPy)")
         
+        # Physical Constraints & Limits
+        self.causality_limit = (0.1, 10.0)
+
         # Initialize Spacetime Grid (Minkowski start)
-        self.metric = self.xp.ones((self.N, self.N, self.N, 4, 4)) * -1.0
+        self.metric = self.xp.zeros((self.N, self.N, self.N, 4, 4))
         for i in range(4):
             self.metric[..., i, i] = 1.0  # Diagonal components
     
@@ -168,6 +171,13 @@ class AethelgardEngineGPU:
             curvature_update = (8 * self.xp.pi * self.G / self.c**4) * T_total
             current_geometry[..., 0, 0] += 0.01 * curvature_update
             
+            # PHYSICAL CONSTRAINT: Causality Clamp
+            current_geometry[..., 0, 0] = self.xp.clip(
+                current_geometry[..., 0, 0], 
+                self.causality_limit[0], 
+                self.causality_limit[1]
+            )
+
             # Progress indicator
             if verbose and (i + 1) % 20 == 0:
                 print(f"  Iteration {i+1}/{iterations}")
@@ -231,15 +241,17 @@ class AethelgardEngineGPU:
             return {'message': 'CPU mode - no GPU memory tracking'}
 
 
-def benchmark_cpu_vs_gpu(grid_sizes=[32, 64, 128]):
+def benchmark_cpu_vs_gpu(grid_sizes=None):
     """
     Benchmark CPU vs GPU performance.
-    
+
     Parameters:
     -----------
-    grid_sizes : list
-        List of grid sizes to test
+    grid_sizes : list, optional
+        List of grid sizes to test. Defaults to [32, 64, 128].
     """
+    if grid_sizes is None:
+        grid_sizes = [32, 64, 128]
     import time
     
     print("=" * 70)
@@ -259,7 +271,7 @@ def benchmark_cpu_vs_gpu(grid_sizes=[32, 64, 128]):
         print("  Testing CPU...")
         engine_cpu = AethelgardEngineGPU(grid_size=N, use_gpu=False)
         start = time.time()
-        metric_cpu = engine_cpu.solve_field_equations(mass, entropy, iterations=50, verbose=False)
+        engine_cpu.solve_field_equations(mass, entropy, iterations=50, verbose=False)
         cpu_time = time.time() - start
         print(f"    CPU time: {cpu_time:.2f} seconds")
         
@@ -273,7 +285,9 @@ def benchmark_cpu_vs_gpu(grid_sizes=[32, 64, 128]):
             
             # Actual benchmark
             start = time.time()
-            metric_gpu = engine_gpu.solve_field_equations(mass, entropy, iterations=50, verbose=False)
+            engine_gpu.solve_field_equations(
+                mass, entropy, iterations=50, verbose=False
+            )
             gpu_time = time.time() - start
             print(f"    GPU time: {gpu_time:.2f} seconds")
             
