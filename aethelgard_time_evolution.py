@@ -47,6 +47,10 @@ class AethelgardEngineTimeEvolution(AethelgardEngine):
         """
         super().__init__(grid_size, domain_size)
         
+        # Security: Input validation
+        if not isinstance(dt, (int, float)) or dt <= 0:
+            raise ValueError("Time step dt must be a positive number.")
+
         self.dt = dt
         self.current_time = 0.0
         
@@ -92,6 +96,12 @@ class AethelgardEngineTimeEvolution(AethelgardEngine):
         history : dict
             Time evolution history
         """
+        # Security: Input validation
+        if not isinstance(time_steps, int) or time_steps <= 0:
+            raise ValueError("Time steps must be a positive integer.")
+        if time_steps > 10000:
+            raise ValueError("Time steps exceeds maximum limit of 10000.")
+
         if verbose:
             print("=" * 70)
             print("TIME EVOLUTION SIMULATION")
