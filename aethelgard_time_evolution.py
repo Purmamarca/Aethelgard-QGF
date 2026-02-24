@@ -49,7 +49,9 @@ class AethelgardEngineTimeEvolution(AethelgardEngine):
         
         # Security: Input validation
         if not isinstance(dt, (int, float)) or dt <= 0:
-            raise ValueError("Time step dt must be a positive number.")
+            raise ValueError("Time step (dt) must be a positive number.")
+        if dt > 1000.0:
+            raise ValueError("Time step (dt) is too large.")
 
         self.dt = dt
         self.current_time = 0.0
@@ -99,8 +101,8 @@ class AethelgardEngineTimeEvolution(AethelgardEngine):
         # Security: Input validation
         if not isinstance(time_steps, int) or time_steps <= 0:
             raise ValueError("Time steps must be a positive integer.")
-        if time_steps > 10000:
-            raise ValueError("Time steps exceeds maximum limit of 10000.")
+        if time_steps > 5000:
+            raise ValueError("Time steps exceeds maximum limit of 5000 to prevent resource exhaustion.")
 
         if verbose:
             print("=" * 70)
@@ -224,6 +226,10 @@ class AethelgardEngineTimeEvolution(AethelgardEngine):
         output_dir : str
             Directory to save plots
         """
+        # Security: Prevent path traversal
+        if ".." in output_dir or output_dir.startswith("/") or output_dir.startswith("\\") or ":" in output_dir:
+            raise ValueError("Invalid output directory. Path traversal or absolute paths not allowed.")
+            
         output_path = Path(output_dir)
         output_path.mkdir(exist_ok=True)
         
