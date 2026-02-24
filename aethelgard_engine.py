@@ -8,6 +8,14 @@ class AethelgardEngine:
     modifies the gravitational constant G into an effective G_eff.
     """
     def __init__(self, grid_size=32, domain_size=10.0):
+        # Security: Input validation
+        if not isinstance(grid_size, int) or grid_size <= 0:
+            raise ValueError("Grid size must be a positive integer.")
+        if grid_size > 256:
+            raise ValueError("Grid size exceeds maximum limit of 256 to prevent resource exhaustion.")
+        if not isinstance(domain_size, (int, float)) or domain_size <= 0:
+            raise ValueError("Domain size must be a positive number.")
+
         self.N = grid_size
         self.L = domain_size
         self.dx = self.L / self.N
@@ -47,7 +55,20 @@ class AethelgardEngine:
         Iterative solver for G_mu_nu + Lambda*g_mu_nu = 8*pi*G*T_mu_nu.
         Balances standard mass (attractive) vs quantum info (repulsive).
         """
-        print("Synthesizing metric for Aethelgard-QGF...")
+        # Security: Input validation
+        if not isinstance(iterations, int) or iterations <= 0:
+            raise ValueError("Iterations must be a positive integer.")
+        if iterations > 10000:
+            raise ValueError("Iterations exceeds maximum limit of 10000.")
+
+        if mass_distribution.shape != (self.N, self.N, self.N):
+            raise ValueError(f"Mass distribution shape {mass_distribution.shape} must match grid size ({self.N}, {self.N}, {self.N}).")
+
+        if entropy_map.shape != (self.N, self.N, self.N):
+            raise ValueError(f"Entropy map shape {entropy_map.shape} must match grid size ({self.N}, {self.N}, {self.N}).")
+
+        if verbose:
+            print("Synthesizing metric for Aethelgard-QGF...")
         
         current_geometry = self.metric.copy()
         
