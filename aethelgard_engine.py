@@ -92,3 +92,18 @@ class AethelgardEngine:
             
         self.metric = current_geometry
         return self.metric
+
+    def calculate_paradox_hazard(self):
+        """
+        Calculates the risk of a causality paradox based on metric curvature.
+        Hazard level ranges from 0.0 (safe) to 1.0 (imminent paradox).
+        Uses metric variance as a proxy for instability.
+        """
+        # Simple heuristic: how much does g_00 deviate from Minkowski (1.0)
+        deviation = np.abs(self.metric[..., 0, 0] - 1.0)
+        max_deviation = np.max(deviation)
+        
+        # Normalize to 0-1 range based on causality limits
+        # Max deviation is ~9.0 if g_00 is 10.0 (limit)
+        hazard = np.clip(max_deviation / 9.0, 0.0, 1.0)
+        return float(hazard)

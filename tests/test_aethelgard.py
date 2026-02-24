@@ -127,7 +127,8 @@ class TestAethelgardEngine(unittest.TestCase):
         # Allow some numerical error tolerance
         # Note: Since values are very small (Planck scale), we must set atol to 0 or very small
         self.assertTrue(np.isclose(computed_mean, expected_pressure, rtol=0.1, atol=0),
-                       f"Expected {expected_pressure}, got {computed_mean}. Laplacian calculation may be ignoring dimensions.")
+                       f"Expected {expected_pressure}, got {computed_mean}. "
+                       "Laplacian calculation may be ignoring dimensions.")
 
 
     def test_causality_constraint_enforced(self):
